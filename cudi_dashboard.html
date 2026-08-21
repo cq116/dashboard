@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>库迪饮品店 - 股东看板</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <style>
+        :root { color-scheme: light; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 10px;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .header h1 {
+            color: #667eea;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        .header .update-time {
+            color: #666;
+            font-size: 13px;
+        }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .kpi-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .kpi-card .label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .kpi-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .kpi-card .sub-value {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+        .kpi-card.positive .value { color: #10b981; }
+        .kpi-card.negative .value { color: #ef4444; }
+        .chart-section {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .chart-section h2 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #333;
+            border-left: 4px solid #667eea;
+            padding-left: 10px;
+        }
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+        .chart-container.small {
+            height: 200px;
+        }
+        .table-section {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        #shareholderTable th:nth-child(1),
+        #shareholderTable td:nth-child(1) { width: 18%; }
+        #shareholderTable th:nth-child(2),
+        #shareholderTable td:nth-child(2) { width: 18%; }
+        #shareholderTable th:nth-child(3),
+        #shareholderTable td:nth-child(3) { width: 18%; }
+        #shareholderTable th:nth-child(4),
+        #shareholderTable td:nth-child(4) { width: 23%; }
+        #shareholderTable th:nth-child(5),
+        #shareholderTable td:nth-child(5) { width: 23%; }
+        th {
+            background: #f3f4f6;
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        th.text-right, td.text-right {
+            text-align: right;
+        }
+        td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        tr:hover {
+            background: #f9fafb;
+        }
+        tfoot {
+            font-weight: 600;
+            background: #f9fafb;
+            border-top: 2px solid #e5e7eb;
+        }
+        tfoot td {
+            padding: 12px 8px;
+        }
+        .positive-num { color: #10b981; font-weight: 600; }
+        .negative-num { color: #ef4444; font-weight: 600; }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+        @media (max-width: 768px) {
+            .header h1 { font-size: 20px; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .chart-container { height: 220px; }
+            table { font-size: 11px; }
+            th, td { padding: 8px 5px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>📊 库迪饮品店股东看板</h1>
+            <div class="update-time">数据更新时间：2026年8月</div>
+        </div>
+
+        <!-- 关键指标 -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="label">💰 总投资额</div>
+                <div class="value">¥<span id="totalInvestment">0</span></div>
+            </div>
+            <div class="kpi-card positive">
+                <div class="label">💵 累计回本</div>
+                <div class="value">¥<span id="totalReturn">0</span></div>
+            </div>
+            <div class="kpi-card">
+                <div class="label">📈 回本进度</div>
+                <div class="value"><span id="returnProgress">0</span>%</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar"></div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="label">⏰ 预计回本</div>
+                <div class="value"><span id="monthsToBreakeven">0</span>月</div>
+                <div class="sub-value">按当前速度估算</div>
+            </div>
+        </div>
+
+        <!-- 月度趋势图 -->
+        <div class="chart-section">
+            <h2>📊 月度经营趋势</h2>
+            <div style="margin-bottom: 15px;">
+                <select id="trendSelector" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; background: white; cursor: pointer;">
+                    <option value="profit">利润趋势</option>
+                    <option value="revenue">营业额趋势</option>
+                </select>
+            </div>
+            <div class="chart-container">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 成本占比分析 -->
+        <div class="chart-section">
+            <h2>🥧 月度成本占比分析</h2>
+            <div style="margin-bottom: 15px;">
+                <select id="monthSelector" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; background: white; cursor: pointer;">
+                </select>
+            </div>
+            <div class="chart-container">
+                <canvas id="costBarChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 股东分红明细表 -->
+        <div class="table-section">
+            <h2>💼 股东分红明细（2026年7月）</h2>
+            <table id="shareholderTable">
+                <thead>
+                    <tr>
+                        <th>股东</th>
+                        <th>角色</th>
+                        <th>分红比例</th>
+                        <th class="text-right">本月分红</th>
+                        <th class="text-right">累计分红</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+                <tfoot></tfoot>
+            </table>
+        </div>
+
+        <!-- 月度详细数据表 -->
+        <div class="table-section">
+            <h2>📋 月度经营数据</h2>
+            <table id="monthlyTable">
+                <thead>
+                    <tr>
+                        <th>月份</th>
+                        <th>收入</th>
+                        <th>成本</th>
+                        <th>利润</th>
+                        <th>利润率</th>
+                        <th>环比增长</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script>
+        // ==================== 数据区域 ====================
+        // 每月更新时，只需要修改这部分数据即可
+
+        const storeData = {
+            // 总投资金额（所有股东投入总和）
+            totalInvestment: 300000, // 请根据实际投资金额修改
+
+            // 月度经营数据
+            monthlyData: [
+                { month: '2026-04', revenue: 14964.4, cost: 16120.99, profit: -1156.59 },
+                { month: '2026-05', revenue: 30806.62, cost: 27336.31, profit: 3470.31 },
+                { month: '2026-06', revenue: 33213.41, cost: 31844.86, profit: 1368.55 },
+                { month: '2026-07', revenue: 46736.1, cost: 39916.4, profit: 6819.7 }
+            ],
+
+            // 历史成本明细（每月）
+            costBreakdownByMonth: {
+                '2026-04': {
+                    '成本总额': 16120.99,
+                    '人员成本': 7542.35,
+                    '日常花销': 258.70,
+                    '物资成本': 8219.94
+                },
+                '2026-05': {
+                    '物资成本': 17405.77,
+                    '人员成本': 9655.74,
+                    '水电费': 200.00,
+                    '日常花销': 74.80
+                },
+                '2026-06': {
+                    '物资成本': 18268.55,
+                    '人员成本': 11000,
+                    '物业费': 276.94,
+                    '水电费': 1200,
+                    '日常花销': 369.42
+                },
+                '2026-07': {
+                    '物资成本': 27910.35,
+                    '人员成本': 9855.27,
+                    '物业费': 276.94,
+                    '水电费': 1600,
+                    '日常花销': 273.84
+                }
+            },
+
+            // 股东信息
+            shareholders: [
+                { name: '刘翰隆', role: '投资', ratio: 17.60, currentDividend: 1232, totalDividend: 1936 },
+                { name: '李萌', role: '投资', ratio: 17.60, currentDividend: 1232, totalDividend: 1936 },
+                { name: '资源方', role: '投资', ratio: 17.60, currentDividend: 1232, totalDividend: 1936 },
+                { name: '资源方', role: '资源', ratio: 10.00, currentDividend: 700, totalDividend: 1100 },
+                { name: '梁超', role: '投资', ratio: 27.20, currentDividend: 1904, totalDividend: 2992 },
+                { name: '梁超', role: '管理', ratio: 10.00, currentDividend: 700, totalDividend: 1100 }
+            ]
+        };
+
+        // ==================== 计算函数 ====================
+
+        function calculateMetrics() {
+            const totalProfit = storeData.monthlyData.reduce((sum, m) => sum + m.profit, 0);
+            const totalReturn = Math.max(0, totalProfit);
+            const returnProgress = Math.min(100, (totalReturn / storeData.totalInvestment * 100));
+
+            const recentMonths = storeData.monthlyData.slice(-3);
+            const avgProfit = recentMonths.reduce((sum, m) => sum + m.profit, 0) / recentMonths.length;
+            const remaining = storeData.totalInvestment - totalReturn;
+            const monthsToBreakeven = avgProfit > 0 ? Math.ceil(remaining / avgProfit) : '∞';
+
+            return {
+                totalReturn: totalReturn.toFixed(2),
+                returnProgress: returnProgress.toFixed(1),
+                monthsToBreakeven: monthsToBreakeven === '∞' ? '∞' : monthsToBreakeven
+            };
+        }
+
+        // ==================== 渲染函数 ====================
+
+        function renderKPIs() {
+            const metrics = calculateMetrics();
+            document.getElementById('totalInvestment').textContent = storeData.totalInvestment.toLocaleString();
+            document.getElementById('totalReturn').textContent = parseFloat(metrics.totalReturn).toLocaleString();
+            document.getElementById('returnProgress').textContent = metrics.returnProgress;
+            document.getElementById('monthsToBreakeven').textContent = metrics.monthsToBreakeven;
+            document.getElementById('progressBar').style.width = metrics.returnProgress + '%';
+        }
+
+        let trendChart = null;
+
+        function renderTrendChart(type) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+
+            // 如果图表已存在，先销毁
+            if (trendChart) {
+                trendChart.destroy();
+            }
+
+            const dataMap = {
+                profit: { data: storeData.monthlyData.map(d => d.profit), label: '月度利润', color: '#667eea' },
+                revenue: { data: storeData.monthlyData.map(d => d.revenue), label: '月度营业额', color: '#10b981' }
+            };
+
+            const selectedData = dataMap[type];
+
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: storeData.monthlyData.map(d => d.month.substring(5)),
+                    datasets: [{
+                        label: selectedData.label,
+                        data: selectedData.data,
+                        borderColor: selectedData.color,
+                        backgroundColor: selectedData.color + '20',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => selectedData.label + ': ¥' + context.parsed.y.toLocaleString()
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: type === 'revenue',
+                            ticks: {
+                                callback: (value) => '¥' + value.toLocaleString()
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderTrendSelector() {
+            const selector = document.getElementById('trendSelector');
+            selector.addEventListener('change', (e) => {
+                renderTrendChart(e.target.value);
+            });
+        }
+
+        let costChart = null;
+
+        function renderCostBarChart(selectedMonth) {
+            const ctx = document.getElementById('costBarChart').getContext('2d');
+
+            // 如果图表已存在，先销毁
+            if (costChart) {
+                costChart.destroy();
+            }
+
+            // 获取选中月份的成本数据
+            const costData = storeData.costBreakdownByMonth[selectedMonth];
+            const labels = Object.keys(costData);
+            const data = Object.values(costData);
+            const total = data.reduce((a, b) => a + b, 0);
+
+            // 获取上个月数据计算环比
+            const months = Object.keys(storeData.costBreakdownByMonth);
+            const currentIndex = months.indexOf(selectedMonth);
+            const previousMonth = currentIndex > 0 ? months[currentIndex - 1] : null;
+
+            let growthRates = [];
+            if (previousMonth) {
+                const previousData = storeData.costBreakdownByMonth[previousMonth];
+                growthRates = labels.map(label => {
+                    const current = costData[label] || 0;
+                    const previous = previousData[label] || 0;
+                    if (previous === 0) return current > 0 ? 100 : 0;
+                    return ((current - previous) / previous * 100).toFixed(1);
+                });
+            }
+
+            costChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '成本金额',
+                        data: data,
+                        backgroundColor: [
+                            '#667eea',
+                            '#764ba2',
+                            '#f093fb',
+                            '#4facfe',
+                            '#43e97b'
+                        ],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: (context) => context[0].label,
+                                label: (context) => {
+                                    const value = context.parsed.y;
+                                    const percent = ((value / total) * 100).toFixed(1);
+                                    const growth = growthRates[context.dataIndex];
+                                    let result = `金额: ¥${value.toLocaleString()}\n占比: ${percent}%`;
+                                    if (previousMonth) {
+                                        const growthText = growth > 0 ? `+${growth}` : growth;
+                                        result += `\n环比: ${growthText}%`;
+                                    }
+                                    return result;
+                                }
+                            }
+                        },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            formatter: (value, context) => {
+                                const percent = ((value / total) * 100).toFixed(1);
+                                return `¥${value.toLocaleString()}\n${percent}%`;
+                            },
+                            font: {
+                                size: 11,
+                                weight: 'bold'
+                            },
+                            color: '#374151'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: (value) => '¥' + value.toLocaleString()
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderMonthSelector() {
+            const selector = document.getElementById('monthSelector');
+            const months = Object.keys(storeData.costBreakdownByMonth);
+
+            selector.innerHTML = months.map(month =>
+                `<option value="${month}">${month}</option>`
+            ).join('');
+
+            // 默认选择最新月份
+            selector.value = months[months.length - 1];
+
+            // 添加change事件监听
+            selector.addEventListener('change', (e) => {
+                renderCostBarChart(e.target.value);
+            });
+        }
+
+        function renderShareholderTable() {
+            const tbody = document.getElementById('shareholderTable').querySelector('tbody');
+            const tfoot = document.getElementById('shareholderTable').querySelector('tfoot');
+
+            tbody.innerHTML = storeData.shareholders.map(sh => `
+                <tr>
+                    <td>${sh.name}</td>
+                    <td>${sh.role}</td>
+                    <td>${sh.ratio}%</td>
+                    <td class="positive-num text-right">¥${sh.currentDividend.toLocaleString()}</td>
+                    <td class="positive-num text-right">¥${sh.totalDividend.toLocaleString()}</td>
+                </tr>
+            `).join('');
+
+            // 计算总计
+            const totalCurrent = storeData.shareholders.reduce((sum, sh) => sum + sh.currentDividend, 0);
+            const totalAccumulated = storeData.shareholders.reduce((sum, sh) => sum + sh.totalDividend, 0);
+
+            tfoot.innerHTML = `
+                <tr>
+                    <td>总计</td>
+                    <td></td>
+                    <td></td>
+                    <td class="positive-num text-right">¥${totalCurrent.toLocaleString()}</td>
+                    <td class="positive-num text-right">¥${totalAccumulated.toLocaleString()}</td>
+                </tr>
+            `;
+        }
+
+        function renderMonthlyTable() {
+            const tbody = document.getElementById('monthlyTable').querySelector('tbody');
+            tbody.innerHTML = storeData.monthlyData.map((m, index) => {
+                const profitRate = ((m.profit / m.revenue) * 100).toFixed(1);
+                const profitClass = m.profit >= 0 ? 'positive-num' : 'negative-num';
+
+                // 计算环比增长
+                let growthText = '-';
+                let growthClass = '';
+                if (index > 0) {
+                    const previousProfit = storeData.monthlyData[index - 1].profit;
+                    if (previousProfit !== 0) {
+                        const growth = ((m.profit - previousProfit) / Math.abs(previousProfit) * 100).toFixed(1);
+                        growthClass = growth >= 0 ? 'positive-num' : 'negative-num';
+                        growthText = growth >= 0 ? `+${growth}%` : `${growth}%`;
+                    } else {
+                        growthText = m.profit > 0 ? '+∞' : '-';
+                    }
+                }
+
+                return `
+                    <tr>
+                        <td>${m.month}</td>
+                        <td>¥${m.revenue.toLocaleString()}</td>
+                        <td>¥${m.cost.toLocaleString()}</td>
+                        <td class="${profitClass}">¥${m.profit.toLocaleString()}</td>
+                        <td class="${profitClass}">${profitRate}%</td>
+                        <td class="${growthClass}">${growthText}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ==================== 初始化 ====================
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderKPIs();
+            renderTrendSelector();
+            renderTrendChart('profit');
+            renderMonthSelector();
+            renderCostBarChart(Object.keys(storeData.costBreakdownByMonth).pop());
+            renderShareholderTable();
+            renderMonthlyTable();
+        });
+    </script>
+</body>
+</html>
