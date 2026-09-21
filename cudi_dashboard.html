@@ -164,7 +164,7 @@
         <!-- 头部 -->
         <div class="header">
             <h1>📊 库迪饮品店股东看板</h1>
-            <div class="update-time">数据更新时间：2026年8月</div>
+            <div class="update-time">数据更新至 2026 年 8 月</div>
         </div>
 
         <!-- 关键指标 -->
@@ -219,7 +219,7 @@
 
         <!-- 股东分红明细表 -->
         <div class="table-section">
-            <h2>💼 股东分红明细（2026年7月）</h2>
+            <h2>💼 股东分红明细（2026年8月）</h2>
             <table id="shareholderTable">
                 <thead>
                     <tr>
@@ -261,54 +261,69 @@
 
         const storeData = {
             // 总投资金额（所有股东投入总和）
-            totalInvestment: 186864,
+            totalInvestment: 236864,
 
             // 月度经营数据
             monthlyData: [
                 { month: '2026-04', revenue: 14964.4, cost: 16120.99, profit: -1156.59 },
                 { month: '2026-05', revenue: 30806.62, cost: 27336.31, profit: 3470.31 },
                 { month: '2026-06', revenue: 33213.41, cost: 31844.86, profit: 1368.55 },
-                { month: '2026-07', revenue: 46736.1, cost: 39916.4, profit: 6819.7 }
+                { month: '2026-07', revenue: 46736.1, cost: 39916.4, profit: 6819.7 },
+                { month: '2026-08', revenue: 36374.39, cost: 32796.92, profit: 3577.47 }
             ],
 
             // 历史成本明细（每月）
             costBreakdownByMonth: {
                 '2026-04': {
-                    '成本总额': 16120.99,
+                    '物料成本': 8319.94,
                     '人员成本': 7542.35,
+                    '物业费': 0,
+                    '水电费': 0,
                     '日常花销': 258.70,
-                    '物资成本': 8219.94
+                    '营销成本': 0
                 },
                 '2026-05': {
-                    '物资成本': 17405.77,
+                    '物料成本': 17405.77,
                     '人员成本': 9655.74,
-                    '水电费': 200.00,
-                    '日常花销': 74.80
+                    '物业费': 0,
+                    '水电费': 200,
+                    '日常花销': 74.80,
+                    '营销成本': 0
                 },
                 '2026-06': {
-                    '物资成本': 18268.55,
+                    '物料成本': 18998.50,
                     '人员成本': 11000,
                     '物业费': 276.94,
                     '水电费': 1200,
-                    '日常花销': 369.42
+                    '日常花销': 369.42,
+                    '营销成本': 0
                 },
                 '2026-07': {
-                    '物资成本': 27910.35,
+                    '物料成本': 27910.35,
                     '人员成本': 9855.27,
                     '物业费': 276.94,
                     '水电费': 1600,
-                    '日常花销': 273.84
+                    '日常花销': 273.84,
+                    '营销成本': 0
+                },
+                '2026-08': {
+                    '物料成本': 21409.15,
+                    '人员成本': 9644.44,
+                    '物业费': 276.94,
+                    '水电费': 1300,
+                    '日常花销': 126.39,
+                    '营销成本': 40
                 }
             },
 
-            // 股东信息
+            // 股东信息（本月＝2026年8月取整后分红，累计＝4月至8月合计）
             shareholders: [
-                { name: '刘翰隆', role: '投资', ratio: 17.60, currentDividend: 1232, totalDividend: 1936 },
-                { name: '李萌', role: '投资', ratio: 17.60, currentDividend: 1232, totalDividend: 1936 },
-                { name: '资源方', role: '投资', ratio: 17.60, currentDividend: 1232, totalDividend: 1936 },
-                { name: '资源方', role: '资源', ratio: 10.00, currentDividend: 700, totalDividend: 1100 },
-                { name: '梁超', role: '投资', ratio: 27.20, currentDividend: 1904, totalDividend: 2992 },
-                { name: '梁超', role: '管理', ratio: 10.00, currentDividend: 700, totalDividend: 1100 }
+                { name: '刘翰隆', role: '投资', ratio: 17.60, currentDividend: 616, totalDividend: 2552 },
+                { name: '李萌', role: '投资', ratio: 17.60, currentDividend: 616, totalDividend: 2552 },
+                { name: '资源方', role: '投资', ratio: 17.60, currentDividend: 616, totalDividend: 2552 },
+                { name: '资源方', role: '资源', ratio: 10.00, currentDividend: 350, totalDividend: 1450 },
+                { name: '梁超', role: '投资', ratio: 27.20, currentDividend: 952, totalDividend: 3944 },
+                { name: '梁超', role: '管理', ratio: 10.00, currentDividend: 350, totalDividend: 1450 }
             ]
         };
 
@@ -448,7 +463,8 @@
                             '#764ba2',
                             '#f093fb',
                             '#4facfe',
-                            '#43e97b'
+                            '#43e97b',
+                            '#fbbf24'
                         ],
                         borderRadius: 8
                     }]
